@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日程转 ICS 工具</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#0078D4',
+secondary: '#2B88D8'
+},
+borderRadius: {
+'none': '0px',
+'sm': '2px',
+DEFAULT: '4px',
+'md': '8px',
+'lg': '12px',
+'xl': '16px',
+'2xl': '20px',
+'3xl': '24px',
+'full': '9999px',
+'button': '4px'
+}
+}
+}
+}
+</script>
+<style>
+body {
+min-height: 1024px;
+font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+.hero-bg {
+background-image: url('https://ai-public.mastergo.com/ai/img_res/e511dd28912b0e06742804443043e0ec.jpg');
+background-size: cover;
+background-position: center;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<header class="bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+<h1 class="text-2xl font-semibold text-gray-900">日程转 ICS 工具</h1>
+</div>
+</header>
+<div class="hero-bg">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+<div class="max-w-xl">
+<h2 class="text-4xl font-bold text-white mb-6">轻松创建日历事件</h2>
+<p class="text-lg text-white opacity-90 mb-8">将文本日程快速转换为标准 ICS 格式，支持一键导入到各类日历应用</p>
+</div>
+</div>
+</div>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="bg-white rounded-lg shadow-sm p-8 mb-8">
+<h3 class="text-lg font-medium text-gray-900 mb-4">输入日程详情</h3>
+<div class="mb-6">
+<textarea id="scheduleInput" rows="6" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-base" placeholder="请输入日程详情"></textarea>
+</div>
+<button id="generateBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-6 py-2 font-medium transition-colors duration-200 flex items-center">
+<i class="fas fa-calendar-plus mr-2"></i>
+生成 ICS
+</button>
+</div>
+<div id="resultSection" class="hidden bg-white rounded-lg shadow-sm p-8">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-medium text-gray-900">生成结果</h3>
+<div class="space-x-4">
+<button id="copyBtn" class="!rounded-button text-gray-700 hover:text-primary px-4 py-2 font-medium transition-colors duration-200 flex items-center">
+<i class="fas fa-copy mr-2"></i>
+复制代码
+</button>
+<button id="downloadBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-4 py-2 font-medium transition-colors duration-200 flex items-center">
+<i class="fas fa-download mr-2"></i>
+下载 ICS 文件
+</button>
+</div>
+</div>
+<div class="bg-gray-50 rounded-md p-4">
+<pre id="icsCode" class="text-sm text-gray-600 font-mono whitespace-pre-wrap"></pre>
+</div>
+</div>
+</main>
+<footer class="bg-gray-100 mt-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div>
+<h4 class="text-sm font-semibold text-gray-900 mb-4">关于工具</h4>
+<p class="text-sm text-gray-600">本工具支持将文本格式的日程信息转换为标准的 ICS 日历文件格式，方便导入到各类日历应用中使用。</p>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-gray-900 mb-4">支持的日历</h4>
+<ul class="text-sm text-gray-600 space-y-2">
+<li>• Microsoft Outlook</li>
+<li>• Google Calendar</li>
+<li>• Apple Calendar</li>
+<li>• 其他支持 ICS 格式的日历应用</li>
+</ul>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-gray-900 mb-4">使用帮助</h4>
+<ul class="text-sm text-gray-600 space-y-2">
+<li>• 输入格式说明</li>
+<li>• 常见问题</li>
+<li>• 联系支持</li>
+</ul>
+</div>
+</div>
+</div>
+</footer>
+<script>
+async function generateICS(input) {
+    try {
+        const response = await fetch('http://localhost:8000/convert-to-ics', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ scheduleInput: input }),
+        });
+        const data = await response.json();
+        return data.ics;
+    } catch (error) {
+        console.error('Error:', error);
+        return `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Error//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:error\nDTSTAMP:error\nSUMMARY:转换失败\nDESCRIPTION:${error.message}\nEND:VEVENT\nEND:VCALENDAR`;
+    }
+}
+
+const generateBtn = document.getElementById('generateBtn');
+const resultSection = document.getElementById('resultSection');
+const icsCode = document.getElementById('icsCode');
+const copyBtn = document.getElementById('copyBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+
+generateBtn.addEventListener('click', () => {
+    const input = document.getElementById('scheduleInput').value;
+    if (!input) return;
+    generateICS(input).then(icsContent => {
+        icsCode.textContent = icsContent;
+        resultSection.classList.remove('hidden');
+    });
+});
+
+copyBtn.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(icsCode.textContent);
+    copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>已复制';
+    setTimeout(() => {
+        copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i>复制代码';
+    }, 2000);
+});
+
+downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([icsCode.textContent], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'event.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
