@@ -58,32 +58,36 @@ background-position: center;
 </div>
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 <div class="bg-white rounded-lg shadow-sm p-8 mb-8">
-<h3 class="text-lg font-medium text-gray-900 mb-4">输入日程详情</h3>
-<div class="mb-6">
-<textarea id="scheduleInput" rows="6" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-base" placeholder="请输入日程详情"></textarea>
-</div>
-<button id="generateBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-6 py-2 font-medium transition-colors duration-200 flex items-center">
-<i class="fas fa-calendar-plus mr-2"></i>
-生成 ICS
-</button>
+  <h3 class="text-lg font-medium text-gray-900 mb-4">输入日程详情</h3>
+  <div class="mb-6">
+    <textarea id="scheduleInput" rows="6" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-base" placeholder="请输入日程详情"></textarea>
+  </div>
+  <div class="mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-2" for="imageUpload">或者上传包含日程的图片：</label>
+    <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-secondary transition-colors duration-200">
+  </div>
+  <button id="generateBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-6 py-2 font-medium transition-colors duration-200 flex items-center">
+    <i class="fas fa-calendar-plus mr-2"></i>
+    生成 ICS
+  </button>
 </div>
 <div id="resultSection" class="hidden bg-white rounded-lg shadow-sm p-8">
-<div class="flex justify-between items-center mb-4">
-<h3 class="text-lg font-medium text-gray-900">生成结果</h3>
-<div class="space-x-4">
-<button id="copyBtn" class="!rounded-button text-gray-700 hover:text-primary px-4 py-2 font-medium transition-colors duration-200 flex items-center">
-<i class="fas fa-copy mr-2"></i>
-复制代码
-</button>
-<button id="downloadBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-4 py-2 font-medium transition-colors duration-200 flex items-center">
-<i class="fas fa-download mr-2"></i>
-下载 ICS 文件
-</button>
-</div>
-</div>
-<div class="bg-gray-50 rounded-md p-4">
-<pre id="icsCode" class="text-sm text-gray-600 font-mono whitespace-pre-wrap"></pre>
-</div>
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-medium text-gray-900">生成结果</h3>
+    <div class="space-x-4">
+      <button id="copyBtn" class="!rounded-button text-gray-700 hover:text-primary px-4 py-2 font-medium transition-colors duration-200 flex items-center">
+        <i class="fas fa-copy mr-2"></i>
+        复制代码
+      </button>
+      <button id="downloadBtn" class="!rounded-button bg-primary hover:bg-secondary text-white px-4 py-2 font-medium transition-colors duration-200 flex items-center">
+        <i class="fas fa-download mr-2"></i>
+        下载 ICS 文件
+      </button>
+    </div>
+  </div>
+  <div class="bg-gray-50 rounded-md p-4">
+    <pre id="icsCode" class="text-sm text-gray-600 font-mono whitespace-pre-wrap"></pre>
+  </div>
 </div>
 </main>
 <footer class="bg-gray-100 mt-12">
@@ -136,14 +140,59 @@ const resultSection = document.getElementById('resultSection');
 const icsCode = document.getElementById('icsCode');
 const copyBtn = document.getElementById('copyBtn');
 const downloadBtn = document.getElementById('downloadBtn');
+const imageUpload = document.getElementById('imageUpload');
 
-generateBtn.addEventListener('click', () => {
+let currentFile = null;
+
+// 监听文件选择
+imageUpload.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        currentFile = file;
+        // 显示文件名
+        console.log(`已选择文件: ${file.name}`);
+    }
+});
+
+generateBtn.addEventListener('click', async () => {
     const input = document.getElementById('scheduleInput').value;
-    if (!input) return;
-    generateICS(input).then(icsContent => {
+    
+    // 如果有上传的文件，则优先处理文件
+    if (currentFile) {
+        // 创建FormData对象
+        const formData = new FormData();
+        formData.append('file', currentFile);
+        
+        try {
+            // 发送POST请求到新的图片上传接口
+            const response = await fetch('http://localhost:8000/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            // 获取响应数据
+            const data = await response.json();
+            
+            // 显示结果
+            icsCode.textContent = data.ics;
+            resultSection.classList.remove('hidden');
+            
+            // 清除当前文件
+            currentFile = null;
+            // 重置文件输入框
+            imageUpload.value = '';
+        } catch (error) {
+            console.error('图片上传失败:', error);
+            // 错误处理
+            icsCode.textContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Error//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:error\nDTSTAMP:error\nSUMMARY:图片上传失败\nDESCRIPTION:无法上传图片，请检查网络连接或图片格式是否正确。\nEND:VEVENT\nEND:VCALENDAR`;
+            resultSection.classList.remove('hidden');
+        }
+    } else if (input) {
+        // 如果没有文件，则使用文本输入
+        const icsContent = await generateICS(input);
         icsCode.textContent = icsContent;
         resultSection.classList.remove('hidden');
-    });
+    }
 });
 
 copyBtn.addEventListener('click', async () => {
