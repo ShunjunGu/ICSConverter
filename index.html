@@ -89,7 +89,22 @@ background-position: center;
     <pre id="icsCode" class="text-sm text-gray-600 font-mono whitespace-pre-wrap"></pre>
   </div>
 </div>
-</main>
+
+<!-- AI对话模块 -->
+<div class="bg-white rounded-lg shadow-sm p-8 mt-8">
+  <h3 class="text-lg font-medium text-gray-900 mb-4">与Kimi AI对话</h3>
+  <div id="chatBox" class="h-64 overflow-y-auto bg-gray-50 rounded-md p-4 mb-4">
+    <!-- 聊天记录会动态添加到这里 -->
+  </div>
+  <div class="flex">
+    <input type="text" id="chatInput" placeholder="输入问题..." class="flex-grow block w-full rounded-l-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary text-base">
+    <button id="sendBtn" class="!rounded-r-button bg-primary hover:bg-secondary text-white px-6 py-2 font-medium transition-colors duration-200">
+      发送
+    </button>
+  </div>
+</div>
+
+<script src="script.js"></script> <!-- 假设已有脚本文件 -->
 <footer class="bg-gray-100 mt-12">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -24,6 +24,44 @@ class KimiAPIHandler:
             base_url="https://api.moonshot.cn/v1",
         )
 
+    def chat_with_kimi(self, message):
+        """
+        与Kimi AI进行对话
+        
+        参数:
+            message (str): 用户发送的消息
+            
+        返回:
+            str: Kimi AI的回复
+        """
+        try:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # 获取当前时间并格式化
+            
+            # 创建聊天消息
+            messages = [
+                {
+                    "role": "system",
+                    "content": f"你是 Kimi，由 Moonshot AI 提供的人工智能助手。你可以帮助用户解答各种问题，提供信息和建议。当前时间为 {current_time}。"
+                },
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ]
+            
+            # 调用Kimi API进行聊天
+            completion = self.client.chat.completions.create(
+                model="moonshot-v1-8k",
+                messages=messages,
+                temperature=0.7,
+            )
+            
+            return completion.choices[0].message.content
+        except Exception as e:
+            # 添加错误处理
+            print(f"Error chatting with Kimi: {e}")
+            return f"ERROR: 与Kimi对话时发生错误 - {str(e)}"
+    
     def convert_schedule_to_ics(self, schedule_input):
         """
         将用户输入的日程转换为ICS格式
@@ -112,6 +150,13 @@ async def convert_to_ics(request: Request):
     schedule_input = data.get("scheduleInput", "")
     ics_output = handler.convert_schedule_to_ics(schedule_input)
     return {"ics": ics_output}
+
+@app.post("/chat")
+async def chat(request: Request):
+    data = await request.json()
+    message = data.get("message", "")
+    reply = handler.chat_with_kimi(message)
+    return {"reply": reply}
 
 @app.post("/upload-image")
 async def upload_image(file: UploadFile = File(...)):
